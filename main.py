@@ -16,7 +16,7 @@ def generate_questions_with_gemini(api_key, text, num_questions=30):
     # Call the API to generate text
     response = genai.generate_text(
         prompt=prompt,
-        model="models/gemini-1.0-pro",  # Adjust this model name as per the available models
+        model="gemini-1.0-pro",  # Adjust this model name as per the available models
         temperature=1,
         top_p=0.95
     )
