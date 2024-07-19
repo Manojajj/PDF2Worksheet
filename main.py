@@ -62,7 +62,7 @@ def generate_questions_with_gemini(api_key, text, num_questions=30):
     return generated_text.split('\n')
 
 # Streamlit app setup
-st.title("Question Generator with Google Gemini AI")
+st.title("Question paper with answers Generator with Google Gemini AI")
 
 # API Key input
 api_key = st.text_input("Enter your Gemini API Key", type="password")
