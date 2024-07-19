@@ -1,42 +1,82 @@
 import streamlit as st
 import google.generativeai as genai
+import os
+
+# Function to set up Google Gemini AI
+def setup_gemini_ai(api_key):
+    genai.configure(api_key=api_key)
+    return genai
 
 # Streamlit app setup
-st.title("Gemini AI Chatbot")
+st.title("Question Generator with Google Gemini AI")
 
-# Text input for API key
+# API Key input
 api_key = st.text_input("Enter your Gemini API Key", type="password")
 
-# Text input for the prompt
-user_input = st.text_area("Enter your message")
+if api_key:
+    try:
+        # Initialize Google Gemini AI
+        genai_client = setup_gemini_ai(api_key)
+        
+        # Set up the chat session
+        chat_session = genai_client.start_chat()
+        
+        # File upload
+        uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
+        
+        if uploaded_file:
+            # Extract text from PDF
+            pdf_reader = PdfReader(uploaded_file)
+            extracted_text = ""
+            for page in pdf_reader.pages:
+                extracted_text += page.extract_text()
+                
+            st.text_area("Extracted Text", extracted_text, height=300)
+            
+            if st.button("Generate Worksheet"):
+                # Generate questions and answers
+                prompt = f"Generate 30 random questions and answers from the following text:\n{extracted_text}"
+                response = chat_session.send_message(prompt)
+                generated_text = response.text
+                
+                st.write("Generated Questions and Answers:")
+                st.write(generated_text)
+                
+                # Generate and provide download link for PDF
+                pdf_buffer = generate_pdf(generated_text.split('\n'))
+                st.download_button(
+                    label="Download as PDF",
+                    data=pdf_buffer,
+                    file_name="questions_and_answers.pdf",
+                    mime="application/pdf"
+                )
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
 
-if st.button("Generate Response"):
-    if api_key and user_input:
-        # Configure the Gemini API
-        genai.configure(api_key=api_key)
+# Function to generate PDF
+def generate_pdf(qa_pairs):
+    from reportlab.lib.pagesizes import letter
+    from reportlab.pdfgen import canvas
+    import io
 
-        # Create the model
-        generation_config = {
-            "temperature": 1,
-            "top_p": 0.95,
-            "top_k": 64,
-            "max_output_tokens": 8192,
-            "response_mime_type": "text/plain",
-        }
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
 
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-pro",
-            generation_config=generation_config,
-        )
+    c.setFont("Helvetica", 12)
+    c.drawString(30, height - 30, "Generated Questions and Answers")
+    
+    y = height - 50
+    for i, text in enumerate(qa_pairs):
+        c.drawString(30, y, f"Question {i+1}: {text}")
+        y -= 20
+        c.drawString(30, y, f"Answer: [Generated Answer Here]")
+        y -= 40
+        if y < 40:
+            c.showPage()
+            c.setFont("Helvetica", 12)
+            y = height - 30
 
-        # Start chat session
-        chat_session = model.start_chat(history=[])
-
-        # Send message and get response
-        response = chat_session.send_message(user_input)
-
-        # Display response
-        st.write("Response:")
-        st.write(response.text)
-    else:
-        st.warning("Please enter both API key and message.")
+    c.save()
+    buffer.seek(0)
+    return buffer
