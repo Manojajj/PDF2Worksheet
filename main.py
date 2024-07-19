@@ -8,21 +8,33 @@ from reportlab.pdfgen import canvas
 
 # Function to configure and use Google Gemini AI
 def generate_questions_with_gemini(api_key, text, num_questions=30):
+    # Configure the API key
     genai.configure(api_key=api_key)
     
-    # Create a prompt for the API
-    prompt = f"Generate {num_questions} random questions and answers from the following text:\n{text}"
+    # Create the model
+    generation_config = {
+        "temperature": 1,
+        "top_p": 0.95,
+        "top_k": 64,
+        "max_output_tokens": 8192,
+        "response_mime_type": "text/plain",
+    }
     
-    # Call the API to generate text
-    response = genai.generate_text(
-        prompt=prompt,
-        model="models/gemini-1.0-pro",  # Adjust this model name as per the available models
-        temperature=1,
-        top_p=0.95
+    model = genai.GenerativeModel(
+        model_name="models/gemini-1.5-pro",  # Use the correct model name prefix
+        generation_config=generation_config
     )
     
-    # Process and return the response text
-    generated_text = response.get("text", "")  # Adjust based on actual API response format
+    # Start a chat session
+    chat_session = model.start_chat(
+        history=[]
+    )
+    
+    # Generate questions and answers
+    prompt = f"Generate {num_questions} random questions and answers from the following text:\n{text}"
+    response = chat_session.send_message(prompt)
+    
+    generated_text = response.text
     return generated_text.split('\n')
 
 # Streamlit app setup
