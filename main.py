@@ -18,12 +18,11 @@ def generate_questions_with_gemini(api_key, text, num_questions=30):
         prompt=prompt,
         model="gemini-1.5-pro",  # Ensure this is the correct model name as per the documentation
         temperature=1,
-        top_p=0.95,
-        max_tokens=8192
+        top_p=0.95
     )
     
     # Process and return the response text
-    generated_text = response["text"]  # Adjust this based on actual API response format
+    generated_text = response.get("text", "")  # Adjust based on actual API response format
     return generated_text.split('\n')
 
 # Streamlit app setup
