@@ -10,20 +10,20 @@ from reportlab.pdfgen import canvas
 def generate_questions_with_gemini(api_key, text, num_questions=30):
     genai.configure(api_key=api_key)
     
-    # Create a completion prompt
+    # Create a prompt for the API
     prompt = f"Generate {num_questions} random questions and answers from the following text:\n{text}"
     
-    # Use the generative AI model for text completion
-    response = genai.Completion.create(
-        model="gemini-1.5-pro",
+    # Call the API to generate text
+    response = genai.generate_text(
         prompt=prompt,
+        model="gemini-1.5-pro",  # Ensure this is the correct model name as per the documentation
         temperature=1,
         top_p=0.95,
         max_tokens=8192
     )
     
     # Process and return the response text
-    generated_text = response.choices[0].text
+    generated_text = response["text"]  # Adjust this based on actual API response format
     return generated_text.split('\n')
 
 # Streamlit app setup
