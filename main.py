@@ -6,6 +6,30 @@ from PyPDF2 import PdfReader
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
+# Function to generate PDF
+def generate_pdf(qa_pairs):
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    c.setFont("Helvetica", 12)
+    c.drawString(30, height - 30, "Generated Questions and Answers")
+    
+    y = height - 50
+    for i, text in enumerate(qa_pairs):
+        c.drawString(30, y, f"Question {i+1}: {text}")
+        y -= 20
+        c.drawString(30, y, f"Answer: [Generated Answer Here]")
+        y -= 40
+        if y < 40:
+            c.showPage()
+            c.setFont("Helvetica", 12)
+            y = height - 30
+
+    c.save()
+    buffer.seek(0)
+    return buffer
+
 # Function to configure and use Google Gemini AI
 def generate_questions_with_gemini(api_key, text, num_questions=30):
     # Configure the API key
@@ -75,27 +99,3 @@ if api_key:
                 )
             except Exception as e:
                 st.error(f"An error occurred: {e}")
-
-# Function to generate PDF
-def generate_pdf(qa_pairs):
-    buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
-
-    c.setFont("Helvetica", 12)
-    c.drawString(30, height - 30, "Generated Questions and Answers")
-    
-    y = height - 50
-    for i, text in enumerate(qa_pairs):
-        c.drawString(30, y, f"Question {i+1}: {text}")
-        y -= 20
-        c.drawString(30, y, f"Answer: [Generated Answer Here]")
-        y -= 40
-        if y < 40:
-            c.showPage()
-            c.setFont("Helvetica", 12)
-            y = height - 30
-
-    c.save()
-    buffer.seek(0)
-    return buffer
