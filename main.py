@@ -16,10 +16,10 @@ def generate_pdf(qa_pairs):
     c.drawString(30, height - 30, "Generated Questions and Answers")
     
     y = height - 50
-    for i, text in enumerate(qa_pairs):
-        c.drawString(30, y, f"Question {i+1}: {text}")
+    for i, (question, answer) in enumerate(qa_pairs):
+        c.drawString(30, y, f"Question {i+1}: {question}")
         y -= 20
-        c.drawString(30, y, f"Answer: [Generated Answer Here]")
+        c.drawString(30, y, f"Answer: {answer}")
         y -= 40
         if y < 40:
             c.showPage()
@@ -58,11 +58,17 @@ def generate_questions_with_gemini(api_key, text, num_questions=30):
     prompt = f"Generate {num_questions} random questions and answers from the following text:\n{text}"
     response = chat_session.send_message(prompt)
     
-    generated_text = response.text
-    return generated_text.split('\n')
+    generated_text = response.text.split('\n')
+    qa_pairs = []
+    for i in range(0, len(generated_text), 2):
+        question = generated_text[i].strip()
+        answer = generated_text[i+1].strip() if (i+1) < len(generated_text) else "No answer generated"
+        qa_pairs.append((question, answer))
+    
+    return qa_pairs
 
 # Streamlit app setup
-st.title("Question paper with answers Generator with Google Gemini AI")
+st.title("Question Paper with Answers Generator using Google Gemini AI")
 
 # API Key input
 api_key = st.text_input("Enter your Gemini API Key", type="password")
@@ -78,7 +84,8 @@ if api_key:
         for page in pdf_reader.pages:
             extracted_text += page.extract_text()
         
-        st.text_area("Extracted Text", extracted_text, height=300)
+        with st.expander("Extracted Text"):
+            st.text_area("Extracted Text", extracted_text, height=300)
         
         if st.button("Generate Worksheet"):
             # Generate questions and answers
@@ -86,8 +93,9 @@ if api_key:
                 qa_pairs = generate_questions_with_gemini(api_key, extracted_text, num_questions=30)
                 
                 st.write("Generated Questions and Answers:")
-                for i, text in enumerate(qa_pairs):
-                    st.write(f"**Question {i+1}:** {text}")
+                for i, (question, answer) in enumerate(qa_pairs):
+                    st.write(f"**Question {i+1}:** {question}")
+                    st.write(f"**Answer:** {answer}")
                 
                 # Generate and provide download link for PDF
                 pdf_buffer = generate_pdf(qa_pairs)
