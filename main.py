@@ -31,7 +31,7 @@ def generate_pdf(qa_pairs):
     return buffer
 
 # Function to configure and use Google Gemini AI
-def generate_questions_with_gemini(api_key, text, num_questions=30):
+def generate_questions_with_gemini(api_key, text, num_questions=150):
     # Configure the API key
     genai.configure(api_key=api_key)
     
